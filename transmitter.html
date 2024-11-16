@@ -4,84 +4,98 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Transmitter</title>
-    <script src="https://www.gstatic.com/firebasejs/7.6.2/firebase-app.js"></script>
-	<script src="https://www.gstatic.com/firebasejs/7.6.2/firebase-firestore.js"></script>
-	<script src="https://www.gstatic.com/firebasejs/live/3.1/firebase.js"></script>
     <style>
+        /* General Body Styling */
         body {
             margin: 0;
             padding: 0;
             font-family: "Courier New", Courier, monospace;
-            background: #000000;
+            background: linear-gradient(to right, #000000, #002222);
             color: #00cccc;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             height: 100vh;
+            overflow: hidden;
         }
 
+        /* Main Heading */
         h1 {
-            font-size: 2.4rem;
-            text-shadow: 0 0 8px #00cccc, 0 0 16px #00b3b3, 0 0 24px #008080;
+            font-size: 2.8rem;
+            text-shadow: 0 0 12px #00cccc, 0 0 24px #009999, 0 0 36px #007777;
             margin-bottom: 20px;
+            text-align: center;
+            text-transform: uppercase;
         }
 
+        /* Morse Preview Box */
         #morsePreview {
             width: 90%;
-            max-width: 400px;
-            height: 50px;
-            font-size: 1.5rem;
+            max-width: 600px;
+            height: 60px;
+            font-size: 1.8rem;
             color: #00cccc;
-            background: #121212;
+            background: rgba(0, 0, 0, 0.8);
             border: 2px solid #00b3b3;
-            border-radius: 5px;
+            border-radius: 8px;
             padding: 10px;
             text-align: center;
-            margin-bottom: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 0 15px rgba(0, 179, 179, 0.8);
         }
 
+        /* Circular Morse Button */
         .button {
-            width: 150px;
-            height: 150px;
+            width: 160px;
+            height: 160px;
             font-size: 1.5rem;
             color: #ffffff;
-            background-color: #00b3b3;
-            border: none;
+            background: radial-gradient(circle at top left, #004d4d, #001f1f);
+            border: 2px solid #00cccc;
             border-radius: 50%;
             cursor: pointer;
             transition: transform 0.2s, box-shadow 0.2s;
         }
 
+        /* Button Hover */
         .button:hover {
             transform: scale(1.1);
-            box-shadow: 0 0 15px rgba(0, 179, 179, 0.8);
+            box-shadow: 0 0 20px #00b3b3, 0 0 40px #007777;
         }
 
+        /* Button Active State */
         .button:active {
             transform: scale(0.95);
-            background-color: #008080;
+            background: radial-gradient(circle at top left, #002626, #000e0e);
+            box-shadow: inset 0 0 15px #004d4d;
         }
 
+        /* Send Button Styling */
         #sendButton {
             margin-top: 20px;
-            padding: 10px 20px;
-            font-size: 1.2rem;
+            padding: 15px 25px;
+            font-size: 1.3rem;
             color: #ffffff;
-            background-color: #00b3b3;
-            border: none;
-            border-radius: 5px;
+            background: linear-gradient(to right, #007777, #004d4d);
+            border: 2px solid #00b3b3;
+            border-radius: 6px;
             cursor: pointer;
+            box-shadow: 0 0 10px rgba(0, 179, 179, 0.8);
+            transition: transform 0.2s, box-shadow 0.2s;
         }
 
+        /* Send Button Hover */
         #sendButton:hover {
             transform: scale(1.1);
-            box-shadow: 0 0 15px rgba(0, 179, 179, 0.8);
+            box-shadow: 0 0 20px #00b3b3, 0 0 40px #007777;
         }
 
+        /* Send Button Active State */
         #sendButton:active {
             transform: scale(0.95);
-            background-color: #008080;
+            background: linear-gradient(to right, #004d4d, #002626);
+            box-shadow: inset 0 0 15px #004d4d;
         }
     </style>
 </head>
@@ -91,6 +105,10 @@
     <button class="button" id="morseButton">Press</button>
     <button id="sendButton">Send</button>
 
+    <!-- Firebase Configuration and JavaScript -->
+    <script src="https://www.gstatic.com/firebasejs/7.6.2/firebase-app.js"></script>
+	<script src="https://www.gstatic.com/firebasejs/7.6.2/firebase-firestore.js"></script>
+	<script src="https://www.gstatic.com/firebasejs/live/3.1/firebase.js"></script>
     <script>
         // Firebase configuration
         const firebaseConfig = {
@@ -111,6 +129,7 @@ firebase.initializeApp(firebaseConfig);
         const sendButton = document.getElementById("sendButton");
 
         let morseCode = "";
+        let isProcessing = false;
         let pressTimer;
         let isLongPress = false;
         let spaceTimer;
@@ -133,52 +152,64 @@ firebase.initializeApp(firebaseConfig);
             }, 1000); // 1 second delay for auto-space
         }
 
-        // Handle button press
-        morseButton.addEventListener("mousedown", () => {
-            isLongPress = false;
-            clearTimeout(spaceTimer); // Prevent adding a space while pressing
-            pressTimer = setTimeout(() => {
-                // Long press: Add "dah" (-)
-                isLongPress = true;
-                morseCode += "-";
-                updatePreview();
-            }, 500); // Long press threshold
-        });
-
-        morseButton.addEventListener("mouseup", () => {
-            clearTimeout(pressTimer);
-            if (!isLongPress) {
-                // Short press: Add "dit" (.)
-                morseCode += ".";
-                updatePreview();
-            }
-            addSpaceIfNeeded();
-        });
-
-        morseButton.addEventListener("mouseleave", () => {
-            clearTimeout(pressTimer);
-        });
-
         function updatePreview() {
             morsePreview.textContent = morseCode || "Enter Morse Code";
         }
 
+        function handleStart() {
+    isLongPress = false; // Reset long-press flag
+    clearTimeout(spaceTimer); // Clear any previous space timer
+    isProcessing = false; // Reset processing state
+    pressTimer = setTimeout(() => {
+        isLongPress = true; // Mark as a long press
+        morseCode += "-"; // Add dash
+        updatePreview(); // Update the display
+        isProcessing = true; // Prevent dot on release
+    }, 500); // 500ms for a long press
+}
+
+function handleEnd() {
+    clearTimeout(pressTimer); // Stop the long-press timer
+    if (!isProcessing && !isLongPress) {
+        morseCode += "."; // Add dot only if not a long press
+        updatePreview(); // Update the display
+    }
+    isProcessing = true; // Ensure no double action
+    addSpaceIfNeeded(); // Start space timer for auto-spacing
+}
+
+
+
+        // Add event listeners for both mouse and touch events
+        morseButton.addEventListener("mousedown", handleStart);
+        morseButton.addEventListener("mouseup", handleEnd);
+        morseButton.addEventListener("mouseleave", handleEnd);
+        morseButton.addEventListener("touchstart", (e) => {
+            e.preventDefault(); // Prevent touch gestures
+            handleStart();
+        });
+        morseButton.addEventListener("touchend", (e) => {
+            e.preventDefault(); // Prevent touch gestures
+            handleEnd();
+        });
+
         sendButton.addEventListener("click", () => {
-            const words = morseCode.split(" / "); // Split by word
+            const words = morseCode.split(" / ");
             const convertedText = words.map(word =>
                 word.split(" ").map(code => morseCodeMap[code] || "").join("")
             ).join(" ");
 
-            // Store the converted message in the Realtime Database
-            firebase.database().ref('messages').push({
+            // Store message in Firebase
+            const messageRef = firebase.database().ref("messages").push();
+            messageRef.set({
                 message: convertedText,
-                timestamp: new Date().toISOString()
+                timestamp: Date.now()
+            }).then(() => {
+                alert("Message sent!");
+            }).catch((error) => {
+                alert("Failed to send message: " + error.message);
             });
 
-            // Show the "Message sent!" alert
-            alert("Message sent!");
-
-            // Clear the Morse code input
             morseCode = "";
             updatePreview();
         });
