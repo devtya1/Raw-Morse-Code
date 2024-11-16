@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RAW Interface</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: "Courier New", Courier, monospace;
+            background: #000000;
+            color: #00cccc; /* Hacker-style teal */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+
+        h1 {
+            font-size: 2.8rem;
+            color: #00cccc;
+            text-shadow: 0 0 8px #00cccc, 0 0 16px #00b3b3, 0 0 24px #008080;
+            margin-bottom: 20px;
+        }
+
+        .container {
+            text-align: center;
+            padding: 30px;
+            background: #121212;
+            border: 2px solid #00b3b3;
+            box-shadow: 0 0 15px rgba(0, 179, 179, 0.7);
+            border-radius: 10px;
+            width: 90%;
+            max-width: 400px;
+        }
+
+        h2 {
+            font-size: 1.8rem;
+            text-transform: uppercase;
+            color: #00cccc;
+            margin-bottom: 20px;
+        }
+
+        .button {
+            display: inline-block;
+            padding: 15px 25px;
+            margin: 15px;
+            font-size: 1.1rem;
+            color: #ffffff;
+            background-color: #00b3b3;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .button:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 15px rgba(0, 179, 179, 0.8);
+        }
+
+        .button:active {
+            transform: scale(0.95);
+            background-color: #008080;
+        }
+
+        .footer {
+            margin-top: 30px;
+            font-size: 0.8rem;
+            color: #999;
+        }
+    </style>
+</head>
+<body>
+    <h1>Research Analysis Wing</h1>
+    <div class="container">
+        <h2>Communications</h2>
+        <button onclick="window.location='reciever.html'" class="button">Receiver</button>
+        <button onclick="window.location='transmitter.html'" class="button">Transmitter</button>
+        <div class="footer">
+            Government of India | Ministry of Communications <br>
+            All rights reserved &copy; 2024
+        </div>
+    </div>
+</body>
+</html>

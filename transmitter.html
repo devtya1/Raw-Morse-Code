@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transmitter</title>
+    <script src="https://www.gstatic.com/firebasejs/7.6.2/firebase-app.js"></script>
+	<script src="https://www.gstatic.com/firebasejs/7.6.2/firebase-firestore.js"></script>
+	<script src="https://www.gstatic.com/firebasejs/live/3.1/firebase.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: "Courier New", Courier, monospace;
+            background: #000000;
+            color: #00cccc;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+
+        h1 {
+            font-size: 2.4rem;
+            text-shadow: 0 0 8px #00cccc, 0 0 16px #00b3b3, 0 0 24px #008080;
+            margin-bottom: 20px;
+        }
+
+        #morsePreview {
+            width: 90%;
+            max-width: 400px;
+            height: 50px;
+            font-size: 1.5rem;
+            color: #00cccc;
+            background: #121212;
+            border: 2px solid #00b3b3;
+            border-radius: 5px;
+            padding: 10px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .button {
+            width: 150px;
+            height: 150px;
+            font-size: 1.5rem;
+            color: #ffffff;
+            background-color: #00b3b3;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .button:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 15px rgba(0, 179, 179, 0.8);
+        }
+
+        .button:active {
+            transform: scale(0.95);
+            background-color: #008080;
+        }
+
+        #sendButton {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 1.2rem;
+            color: #ffffff;
+            background-color: #00b3b3;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        #sendButton:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 15px rgba(0, 179, 179, 0.8);
+        }
+
+        #sendButton:active {
+            transform: scale(0.95);
+            background-color: #008080;
+        }
+    </style>
+</head>
+<body>
+    <h1>Telegraph Transmitter</h1>
+    <div id="morsePreview">Enter Morse Code</div>
+    <button class="button" id="morseButton">Press</button>
+    <button id="sendButton">Send</button>
+
+    <script>
+        // Firebase configuration
+        const firebaseConfig = {
+  apiKey: "AIzaSyBJP1UUNzEVahVanekcmoS6zCUunGjZh9Q",
+  authDomain: "comms-7cb8c.firebaseapp.com",
+  databaseURL: "https://comms-7cb8c-default-rtdb.firebaseio.com",
+  projectId: "comms-7cb8c",
+  storageBucket: "comms-7cb8c.firebasestorage.app",
+  messagingSenderId: "113369441545",
+  appId: "1:113369441545:web:8b472668adca3ac41adfd8"
+};
+
+// Initialize Firebase
+firebase.initializeApp(firebaseConfig);
+
+        const morsePreview = document.getElementById("morsePreview");
+        const morseButton = document.getElementById("morseButton");
+        const sendButton = document.getElementById("sendButton");
+
+        let morseCode = "";
+        let pressTimer;
+        let isLongPress = false;
+        let spaceTimer;
+
+        const morseCodeMap = {
+            ".-": "A", "-...": "B", "-.-.": "C", "-..": "D", ".": "E",
+            "..-.": "F", "--.": "G", "....": "H", "..": "I", ".---": "J",
+            "-.-": "K", ".-..": "L", "--": "M", "-.": "N", "---": "O",
+            ".--.": "P", "--.-": "Q", ".-.": "R", "...": "S", "-": "T",
+            "..-": "U", "...-": "V", ".--": "W", "-..-": "X", "-.--": "Y",
+            "--..": "Z", "-----": "0", ".----": "1", "..---": "2", "...--": "3",
+            "....-": "4", ".....": "5", "-....": "6", "--...": "7", "---..": "8",
+            "----.": "9", "/": " "
+        };
+
+        function addSpaceIfNeeded() {
+            spaceTimer = setTimeout(() => {
+                morseCode += " ";
+                updatePreview();
+            }, 1000); // 1 second delay for auto-space
+        }
+
+        // Handle button press
+        morseButton.addEventListener("mousedown", () => {
+            isLongPress = false;
+            clearTimeout(spaceTimer); // Prevent adding a space while pressing
+            pressTimer = setTimeout(() => {
+                // Long press: Add "dah" (-)
+                isLongPress = true;
+                morseCode += "-";
+                updatePreview();
+            }, 500); // Long press threshold
+        });
+
+        morseButton.addEventListener("mouseup", () => {
+            clearTimeout(pressTimer);
+            if (!isLongPress) {
+                // Short press: Add "dit" (.)
+                morseCode += ".";
+                updatePreview();
+            }
+            addSpaceIfNeeded();
+        });
+
+        morseButton.addEventListener("mouseleave", () => {
+            clearTimeout(pressTimer);
+        });
+
+        function updatePreview() {
+            morsePreview.textContent = morseCode || "Enter Morse Code";
+        }
+
+        sendButton.addEventListener("click", () => {
+            const words = morseCode.split(" / "); // Split by word
+            const convertedText = words.map(word =>
+                word.split(" ").map(code => morseCodeMap[code] || "").join("")
+            ).join(" ");
+
+            // Store the converted message in the Realtime Database
+            firebase.database().ref('messages').push({
+                message: convertedText,
+                timestamp: new Date().toISOString()
+            });
+
+            // Show the "Message sent!" alert
+            alert("Message sent!");
+
+            // Clear the Morse code input
+            morseCode = "";
+            updatePreview();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Receiver</title>
+    <style>
+        /* General Body Styling */
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: "Courier New", Courier, monospace;
+            background: linear-gradient(to right, #000000, #002222);
+            color: #00cccc;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Main Heading */
+        h1 {
+            font-size: 2.8rem;
+            text-shadow: 0 0 12px #00cccc, 0 0 24px #009999, 0 0 36px #007777;
+            margin-bottom: 20px;
+            text-align: center;
+            text-transform: uppercase;
+        }
+
+        /* Message Display Box */
+        #messageDisplay {
+            width: 90%;
+            max-width: 600px;
+            min-height: 200px;
+            font-size: 1.5rem;
+            color: #00cccc;
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid #00b3b3;
+            border-radius: 8px;
+            padding: 20px;
+            overflow-y: auto;
+            box-shadow: 0 0 15px rgba(0, 179, 179, 0.8);
+        }
+
+        /* Message Styling */
+        .message {
+            margin: 10px 0;
+            padding: 10px;
+            background: rgba(0, 51, 51, 0.6);
+            border: 1px solid #009999;
+            border-radius: 5px;
+        }
+
+        /* Scrollbar Styling */
+        #messageDisplay::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        #messageDisplay::-webkit-scrollbar-thumb {
+            background: #00b3b3;
+            border-radius: 5px;
+        }
+
+        #messageDisplay::-webkit-scrollbar-track {
+            background: #002222;
+        }
+    </style>
+</head>
+<body>
+    <h1>Telegraph Receiver</h1>
+    <div id="messageDisplay">Waiting for messages...</div>
+
+    <!-- Firebase Configuration and JavaScript -->
+    <script src="https://www.gstatic.com/firebasejs/7.6.2/firebase-app.js"></script>
+	<script src="https://www.gstatic.com/firebasejs/7.6.2/firebase-firestore.js"></script>
+	<script src="https://www.gstatic.com/firebasejs/live/3.1/firebase.js"></script>
+    <script>
+        // Firebase configuration
+        const firebaseConfig = {
+  apiKey: "AIzaSyBJP1UUNzEVahVanekcmoS6zCUunGjZh9Q",
+  authDomain: "comms-7cb8c.firebaseapp.com",
+  databaseURL: "https://comms-7cb8c-default-rtdb.firebaseio.com",
+  projectId: "comms-7cb8c",
+  storageBucket: "comms-7cb8c.firebasestorage.app",
+  messagingSenderId: "113369441545",
+  appId: "1:113369441545:web:8b472668adca3ac41adfd8"
+};
+
+// Initialize Firebase
+firebase.initializeApp(firebaseConfig);
+
+        const messageDisplay = document.getElementById("messageDisplay");
+
+        // Listen for new messages
+        firebase.database().ref("messages").on("child_added", (snapshot) => {
+            const message = snapshot.val();
+            if (message && message.message) {
+                displayMessage(message.message);
+            }
+        });
+
+        // Display a new message in the message box
+        function displayMessage(text) {
+            if (messageDisplay.textContent === "Waiting for messages...") {
+                messageDisplay.textContent = "";
+            }
+
+            const messageElement = document.createElement("div");
+            messageElement.className = "message";
+            messageElement.textContent = text;
+            messageDisplay.appendChild(messageElement);
+
+            // Scroll to the latest message
+            messageDisplay.scrollTop = messageDisplay.scrollHeight;
+        }
+    </script>
+</body>
+</html>
