@@ -5,6 +5,67 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Transmitter</title>
     <style>
+	    body {
+            margin: 0;
+            padding: 0;
+            font-family: "Courier New", Courier, monospace;
+            background: linear-gradient(to right, #000000, #002222);
+            color: #00cccc;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Dialog Styling */
+        .dialog {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.9);
+            color: #ffffff;
+            border: 2px solid #ff4444;
+            border-radius: 8px;
+            box-shadow: 0 0 15px #ff4444;
+            padding: 20px;
+            text-align: center;
+            z-index: 1000;
+            width: 300px;
+        }
+
+        /* Warning Dialog Effects */
+        .warning {
+            border-color: #ff0000;
+            color: #ff4444;
+            text-shadow: 0 0 10px #ff4444, 0 0 20px #ff0000;
+        }
+
+        /* Close Button */
+        .close-btn {
+            display: inline-block;
+            margin-top: 10px;
+            padding: 8px 12px;
+            font-size: 1rem;
+            background: #ff4444;
+            color: #ffffff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .close-btn:hover {
+            background: #ff0000;
+        }
+
+        /* Hide Dialog Initially */
+        .hidden {
+            display: none;
+        }
+	    
 	.dialog {
             position: fixed;
             top: 0;
@@ -161,6 +222,15 @@
         </div>
     </div>
 
+	<div id="warningDialog" class="dialog hidden">
+        <p id="dialogMessage"></p>
+        <button id="closeButton" class="close-btn">Close</button>
+    </div>
+
+    <div id="finalDialog" class="dialog hidden warning">
+        <p>Test Closed!</p>
+    </div>
+
     <!-- Firebase Configuration and JavaScript -->
     <script src="https://www.gstatic.com/firebasejs/7.6.2/firebase-app.js"></script>
 	<script src="https://www.gstatic.com/firebasejs/7.6.2/firebase-firestore.js"></script>
@@ -185,6 +255,7 @@ firebase.initializeApp(firebaseConfig);
         const sendButton = document.getElementById("sendButton");
 
         let morseCode = "";
+	let reloadCount = parseInt(localStorage.getItem("reloadCount")) || 0;
         let isProcessing = false;
         let pressTimer;
         let isLongPress = false;
@@ -292,6 +363,34 @@ function handleEnd() {
                 showHintDialog(hintData.text); // Show the hint in the dialog box
             }
         });
+
+	reloadCount++;
+        localStorage.setItem("reloadCount", reloadCount);
+
+        // Select dialog elements
+        const warningDialog = document.getElementById("warningDialog");
+        const finalDialog = document.getElementById("finalDialog");
+        const dialogMessage = document.getElementById("dialogMessage");
+        const closeButton = document.getElementById("closeButton");
+
+        // Display logic based on reload count
+        if (reloadCount === 3) {
+            dialogMessage.textContent = `Refreshes left: ${4 - reloadCount}`;
+            warningDialog.classList.remove("hidden");
+        } else if (reloadCount === 4) {
+            finalDialog.classList.remove("hidden");
+        }
+
+        // Close button event for the warning dialog
+        closeButton.addEventListener("click", () => {
+            warningDialog.classList.add("hidden");
+        });
+
+        // Disable ability to close final dialog (no close button added)
+        if (reloadCount >= 4) {
+            document.body.innerHTML = ""; // Optional: Clear content to emphasize "Test Closed!"
+            document.body.appendChild(finalDialog); // Ensure only the final dialog is visible
+        }
     </script>
 </body>
 </html>
