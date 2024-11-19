@@ -5,6 +5,55 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Transmitter</title>
     <style>
+	.dialog {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .dialogContent {
+            background: rgba(0, 51, 51, 0.9);
+            border: 2px solid #00b3b3;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 0 20px rgba(0, 179, 179, 0.9);
+            color: #00cccc;
+            text-align: center;
+            position: relative;
+            width: 80%;
+            max-width: 400px;
+        }
+
+        .dialogContent p {
+            font-size: 1.5rem;
+            margin: 20px 0;
+        }
+
+        .closeButton {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 1.5rem;
+            color: #00cccc;
+            cursor: pointer;
+            background: none;
+            border: none;
+        }
+
+        .closeButton:hover {
+            color: #ff6666;
+        }
         /* General Body Styling */
         body {
             margin: 0;
@@ -104,6 +153,13 @@
     <div id="morsePreview">Enter Morse Code</div>
     <button class="button" id="morseButton">Press</button>
     <button id="sendButton">Send</button>
+
+     <div id="hintDialog" class="dialog hidden">
+        <div class="dialogContent">
+            <span id="closeDialog" class="closeButton">&times;</span>
+            <p id="hintText">This is the hint</p>
+        </div>
+    </div>
 
     <!-- Firebase Configuration and JavaScript -->
     <script src="https://www.gstatic.com/firebasejs/7.6.2/firebase-app.js"></script>
@@ -212,6 +268,29 @@ function handleEnd() {
 
             morseCode = "";
             updatePreview();
+        });
+
+	const hintDialog = document.getElementById("hintDialog");
+        const hintText = document.getElementById("hintText");
+        const closeDialog = document.getElementById("closeDialog");
+
+        // Show dialog box with hint
+        function showHintDialog(hint) {
+            hintText.textContent = hint; // Set the hint text
+            hintDialog.classList.remove("hidden"); // Show the dialog
+        }
+
+        // Close the dialog box
+        closeDialog.addEventListener("click", () => {
+            hintDialog.classList.add("hidden"); // Hide the dialog
+        });
+
+        // Listen for hint updates in Firebase
+        firebase.database().ref("hint").on("value", (snapshot) => {
+            const hintData = snapshot.val();
+            if (hintData && hintData.text) {
+                showHintDialog(hintData.text); // Show the hint in the dialog box
+            }
         });
     </script>
 </body>
