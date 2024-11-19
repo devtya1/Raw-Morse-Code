@@ -36,13 +36,6 @@
             width: 300px;
         }
 
-        /* Warning Dialog Effects */
-        .warning {
-            border-color: #ff0000;
-            color: #ff4444;
-            text-shadow: 0 0 10px #ff4444, 0 0 20px #ff0000;
-        }
-
         /* Close Button */
         .close-btn {
             display: inline-block;
@@ -59,6 +52,14 @@
 
         .close-btn:hover {
             background: #ff0000;
+        }
+
+        /* Final Warning Styling */
+        .warning {
+            background: #ff0000;
+            color: #ffffff;
+            border: 2px solid #990000;
+            text-shadow: 0 0 10px #990000, 0 0 20px #ff0000;
         }
 
         /* Hide Dialog Initially */
@@ -368,28 +369,34 @@ function handleEnd() {
         localStorage.setItem("reloadCount", reloadCount);
 
         // Select dialog elements
-        const warningDialog = document.getElementById("warningDialog");
+        const refreshDialog = document.getElementById("refreshDialog");
         const finalDialog = document.getElementById("finalDialog");
         const dialogMessage = document.getElementById("dialogMessage");
         const closeButton = document.getElementById("closeButton");
 
-        // Display logic based on reload count
-        if (reloadCount === 3) {
-            dialogMessage.textContent = `Refreshes left: ${4 - reloadCount}`;
-            warningDialog.classList.remove("hidden");
-        } else if (reloadCount === 4) {
+        // Total allowed refreshes
+        const maxRefreshes = 4;
+
+        // Display dialog based on remaining refreshes
+        if (reloadCount < maxRefreshes) {
+            const refreshesLeft = maxRefreshes - reloadCount;
+            dialogMessage.textContent = `Refreshes left: ${refreshesLeft}`;
+            refreshDialog.classList.remove("hidden");
+        } else {
+            // Show final warning dialog
+            refreshDialog.classList.add("hidden");
             finalDialog.classList.remove("hidden");
         }
 
-        // Close button event for the warning dialog
+        // Close button functionality
         closeButton.addEventListener("click", () => {
-            warningDialog.classList.add("hidden");
+            refreshDialog.classList.add("hidden");
         });
 
-        // Disable ability to close final dialog (no close button added)
-        if (reloadCount >= 4) {
+        // Disable the ability to close the final dialog
+        if (reloadCount >= maxRefreshes) {
             document.body.innerHTML = ""; // Optional: Clear content to emphasize "Test Closed!"
-            document.body.appendChild(finalDialog); // Ensure only the final dialog is visible
+            document.body.appendChild(finalDialog);
         }
     </script>
 </body>
