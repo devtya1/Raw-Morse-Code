@@ -236,8 +236,8 @@
     <script src="https://www.gstatic.com/firebasejs/7.6.2/firebase-app.js"></script>
 	<script src="https://www.gstatic.com/firebasejs/7.6.2/firebase-firestore.js"></script>
 	<script src="https://www.gstatic.com/firebasejs/live/3.1/firebase.js"></script>
-    <script>
-        // Firebase configuration
+<script>
+	/ Firebase configuration
         const firebaseConfig = {
   apiKey: "AIzaSyBJP1UUNzEVahVanekcmoS6zCUunGjZh9Q",
   authDomain: "comms-7cb8c.firebaseapp.com",
@@ -364,40 +364,4 @@ function handleEnd() {
                 showHintDialog(hintData.text); // Show the hint in the dialog box
             }
         });
-
-	reloadCount++;
-        localStorage.setItem("reloadCount", reloadCount);
-
-        // Select dialog elements
-        const refreshDialog = document.getElementById("refreshDialog");
-        const finalDialog = document.getElementById("finalDialog");
-        const dialogMessage = document.getElementById("dialogMessage");
-        const closeButton = document.getElementById("closeButton");
-
-        // Total allowed refreshes
-        const maxRefreshes = 4;
-
-        // Display dialog based on remaining refreshes
-        if (reloadCount < maxRefreshes) {
-            const refreshesLeft = maxRefreshes - reloadCount;
-            dialogMessage.textContent = Refreshes left: ${refreshesLeft};
-            refreshDialog.classList.remove("hidden");
-        } else {
-            // Show final warning dialog
-            refreshDialog.classList.add("hidden");
-            finalDialog.classList.remove("hidden");
-        }
-
-        // Close button functionality
-        closeButton.addEventListener("click", () => {
-            refreshDialog.classList.add("hidden");
-        });
-
-        // Disable the ability to close the final dialog
-        if (reloadCount >= maxRefreshes) {
-            document.body.innerHTML = ""; // Optional: Clear content to emphasize "Test Closed!"
-            document.body.appendChild(finalDialog);
-        }
-    </script>
-</body>
-</html>
+</script>
