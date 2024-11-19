@@ -72,6 +72,11 @@
     <h1>Telegraph Receiver</h1>
     <div id="messageDisplay">Waiting for messages...</div>
 
+    <div id="hintSection">
+        <input type="text" id="hintInput" placeholder="Enter hint here" />
+        <button id="submitHintButton">Submit Hint</button>
+    </div>
+
     <!-- Firebase Configuration and JavaScript -->
     <script src="https://www.gstatic.com/firebasejs/7.6.2/firebase-app.js"></script>
 	<script src="https://www.gstatic.com/firebasejs/7.6.2/firebase-firestore.js"></script>
@@ -92,6 +97,8 @@
 firebase.initializeApp(firebaseConfig);
 
         const messageDisplay = document.getElementById("messageDisplay");
+	const hintInput = document.getElementById("hintInput");
+        const submitHintButton = document.getElementById("submitHintButton");
 
         // Listen for new messages
         firebase.database().ref("messages").on("child_added", (snapshot) => {
@@ -100,7 +107,7 @@ firebase.initializeApp(firebaseConfig);
                 displayMessage(message.message);
             }
         });
-
+	    
         // Display a new message in the message box
         function displayMessage(text) {
             if (messageDisplay.textContent === "Waiting for messages...") {
@@ -115,6 +122,24 @@ firebase.initializeApp(firebaseConfig);
             // Scroll to the latest message
             messageDisplay.scrollTop = messageDisplay.scrollHeight;
         }
+
+	// Submit hint to Firebase
+        submitHintButton.addEventListener("click", () => {
+            const hint = hintInput.value.trim();
+            if (hint) {
+                firebase.database().ref("hint").set({
+                    text: hint,
+                    timestamp: Date.now()
+                }).then(() => {
+                    alert("Hint sent successfully!");
+                    hintInput.value = ""; // Clear input
+                }).catch((error) => {
+                    alert("Failed to send hint: " + error.message);
+                });
+            } else {
+                alert("Please enter a hint.");
+            }
+        });
     </script>
 </body>
 </html>
