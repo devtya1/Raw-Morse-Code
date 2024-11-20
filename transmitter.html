@@ -82,7 +82,7 @@
   <h1>TELEGRAPH RECEIVER</h1>
   <div class="container">
     <div id="morseDisplay">...</div>
-    <button class="button" id="morseButton" onmousedown="startMorse('dah')" onmouseup="startMorse('dit')">Press for Morse Code</button>
+    <button class="button" id="morseButton" onmousedown="startMorse()" onmouseup="endMorse()">Press for Morse Code</button>
     <button class="button" onclick="sendMessage()">Send</button>
   </div>
   
@@ -112,15 +112,29 @@
 
     let morseCode = "";
     let lastInputTime = Date.now();
+    let holdStart = 0;
+    const DASH_THRESHOLD = 500; // time in milliseconds to register as dash
 
-    function startMorse(type) {
+    function startMorse() {
+      holdStart = Date.now(); // Track when the button is pressed
+    }
+
+    function endMorse() {
+      const holdDuration = Date.now() - holdStart;
+
       const now = Date.now();
       const timeDiff = now - lastInputTime;
       lastInputTime = now;
-      
+
       if (timeDiff > 1000) morseCode += " ";
 
-      morseCode += type === 'dah' ? "-" : ".";
+      // Check if hold duration is long enough for a dash
+      if (holdDuration >= DASH_THRESHOLD) {
+        morseCode += "-";
+      } else {
+        morseCode += ".";
+      }
+      
       document.getElementById("morseDisplay").innerText = morseCode;
     }
 
