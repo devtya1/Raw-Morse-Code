@@ -4,8 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Morse Code Transmitter</title>
-    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/7.6.2/firebase-app.js"></script>
+	<script src="https://www.gstatic.com/firebasejs/7.6.2/firebase-firestore.js"></script>
+	<script src="https://www.gstatic.com/firebasejs/live/3.1/firebase.js"></script>
     <style>
         body {
             margin: 0;
@@ -95,16 +96,16 @@
     <script>
         // Firebase Configuration
         const firebaseConfig = {
-            apiKey: "YOUR_FIREBASE_API_KEY",
-            authDomain: "YOUR_FIREBASE_AUTH_DOMAIN",
-            databaseURL: "YOUR_FIREBASE_DATABASE_URL",
-            projectId: "YOUR_FIREBASE_PROJECT_ID",
-            storageBucket: "YOUR_FIREBASE_STORAGE_BUCKET",
-            messagingSenderId: "YOUR_FIREBASE_SENDER_ID",
-            appId: "YOUR_FIREBASE_APP_ID"
-        };
-
-        const app = firebase.initializeApp(firebaseConfig);
+  apiKey: "AIzaSyBJP1UUNzEVahVanekcmoS6zCUunGjZh9Q",
+  authDomain: "comms-7cb8c.firebaseapp.com",
+  databaseURL: "https://comms-7cb8c-default-rtdb.firebaseio.com",
+  projectId: "comms-7cb8c",
+  storageBucket: "comms-7cb8c.firebasestorage.app",
+  messagingSenderId: "113369441545",
+  appId: "1:113369441545:web:8b472668adca3ac41adfd8"
+};
+        
+        firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
         // Morse Code Map
