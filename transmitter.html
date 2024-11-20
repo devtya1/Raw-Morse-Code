@@ -3,10 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Morse Code Input</title>
-    <script src="https://www.gstatic.com/firebasejs/7.6.2/firebase-app.js"></script>
-	<script src="https://www.gstatic.com/firebasejs/7.6.2/firebase-firestore.js"></script>
-	<script src="https://www.gstatic.com/firebasejs/live/3.1/firebase.js"></script>
+    <title>Morse Code Transmitter</title>
+    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database.js"></script>
     <style>
         body {
             margin: 0;
@@ -38,7 +37,26 @@
             word-wrap: break-word;
         }
 
-        .button {
+        .circular-button {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background-color: #ff3366;
+            color: white;
+            font-size: 16px;
+            border: none;
+            outline: none;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: transform 0.2s, background-color 0.3s;
+        }
+
+        .circular-button:active {
+            transform: scale(0.95);
+            background-color: #ff6699;
+        }
+
+        .send-button {
             padding: 15px 30px;
             margin: 10px;
             font-size: 16px;
@@ -50,50 +68,43 @@
             transition: 0.3s;
         }
 
-        .button:hover {
+        .send-button:hover {
             background-color: #ff6688;
-        }
-
-        .button:active {
-            transform: scale(0.95);
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Morse Code Input</h1>
+        <h1>Morse Code Transmitter</h1>
 
         <!-- Morse Code Display -->
         <div class="morse-display" id="morseDisplay"></div>
 
-        <!-- Morse Code Input Buttons -->
+        <!-- Morse Input Button -->
         <button 
-            class="button" 
-            onmousedown="addMorse('dah')" 
-            ontouchstart="addMorse('dah')" 
+            class="circular-button"
+            onmousedown="startMorse('long')" 
+            ontouchstart="startMorse('long')" 
             onmouseup="stopMorse()" 
-            ontouchend="stopMorse()">Dah (Long Press)</button>
-
-        <button 
-            class="button" 
-            onclick="addMorse('dit')">Dit (Short Press)</button>
+            ontouchend="stopMorse()">Press</button>
 
         <!-- Send Button -->
-        <button class="button" onclick="sendMessage()">Send</button>
+        <button class="send-button" onclick="sendMessage()">Send</button>
     </div>
 
     <script>
         // Firebase Configuration
         const firebaseConfig = {
-  apiKey: "AIzaSyBJP1UUNzEVahVanekcmoS6zCUunGjZh9Q",
-  authDomain: "comms-7cb8c.firebaseapp.com",
-  databaseURL: "https://comms-7cb8c-default-rtdb.firebaseio.com",
-  projectId: "comms-7cb8c",
-  storageBucket: "comms-7cb8c.firebasestorage.app",
-  messagingSenderId: "113369441545",
-  appId: "1:113369441545:web:8b472668adca3ac41adfd8"
-};
-        firebase.initializeApp(firebaseConfig);
+            apiKey: "YOUR_FIREBASE_API_KEY",
+            authDomain: "YOUR_FIREBASE_AUTH_DOMAIN",
+            databaseURL: "YOUR_FIREBASE_DATABASE_URL",
+            projectId: "YOUR_FIREBASE_PROJECT_ID",
+            storageBucket: "YOUR_FIREBASE_STORAGE_BUCKET",
+            messagingSenderId: "YOUR_FIREBASE_SENDER_ID",
+            appId: "YOUR_FIREBASE_APP_ID"
+        };
+
+        const app = firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
         // Morse Code Map
@@ -110,24 +121,32 @@
 
         let morseCode = ''; // Store the Morse code string
         let currentInput = ''; // Current input for a character
+        let lastInputTime = Date.now(); // Time of the last input
+        const SPACE_THRESHOLD = 1000; // Time in ms for auto-space
 
         // Add Morse Code
-        function addMorse(type) {
-            if (type === 'dit') {
-                currentInput += '.';
-            } else if (type === 'dah') {
-                currentInput += '-';
+        function startMorse(type) {
+            const now = Date.now();
+
+            // Auto-add space if gap is greater than SPACE_THRESHOLD
+            if (now - lastInputTime > SPACE_THRESHOLD && currentInput) {
+                morseCode += ' ';
             }
+
+            if (type === 'long') {
+                currentInput += '-';
+            } else {
+                currentInput += '.';
+            }
+            lastInputTime = now;
             updateDisplay();
         }
 
         // Stop Morse Input (Complete a Character)
         function stopMorse() {
-            if (currentInput) {
-                morseCode += currentInput + ' ';
-                currentInput = ''; // Reset current input
-                updateDisplay();
-            }
+            morseCode += currentInput; // Append the completed character
+            currentInput = ''; // Reset current input
+            updateDisplay();
         }
 
         // Update Morse Code Display
