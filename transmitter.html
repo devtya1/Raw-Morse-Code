@@ -6,63 +6,61 @@
     <title>Morse Code Transmitter</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             height: 100vh;
-            margin: 0;
-            background-color: #f4f4f9;
+            background: linear-gradient(to right, #283c86, #45a247);
+            font-family: Arial, sans-serif;
+            color: #fff;
         }
-
+        h1 {
+            text-shadow: 0 0 5px #45a247, 0 0 10px #283c86;
+        }
         #morseDisplay {
-            font-size: 1.5em;
-            margin-bottom: 20px;
-            padding: 10px;
-            border: 2px solid #333;
-            width: 80%;
-            text-align: center;
-            word-wrap: break-word;
+            font-size: 2em;
+            margin: 20px 0;
         }
-
         .button {
-            width: 80px;
-            height: 80px;
-            background-color: #4CAF50;
-            border: none;
+            width: 100px;
+            height: 100px;
             border-radius: 50%;
-            color: white;
-            font-size: 1.5em;
+            background-color: #45a247;
             display: flex;
             align-items: center;
             justify-content: center;
+            font-size: 1.5em;
+            color: #fff;
+            border: none;
+            outline: none;
             cursor: pointer;
-            margin-bottom: 20px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
         }
-
         #sendButton {
+            margin-top: 20px;
             padding: 10px 20px;
-            font-size: 1em;
-            background-color: #008CBA;
-            color: white;
+            background-color: #283c86;
+            color: #fff;
             border: none;
             cursor: pointer;
+            font-size: 1em;
             border-radius: 5px;
         }
     </style>
 </head>
 <body>
-    <div id="morseDisplay"></div>
+
+    <h1>Morse Code Transmitter</h1>
+    <div id="morseDisplay">_ _ _</div>
     <button class="button" id="morseButton">Press</button>
     <button id="sendButton">Send</button>
 
-    <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/7.6.2/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/7.6.2/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/live/3.1/firebase.js"></script>
-
     <script>
+        // Firebase configuration
         const firebaseConfig = {
             apiKey: "AIzaSyBJP1UUNzEVahVanekcmoS6zCUunGjZh9Q",
             authDomain: "comms-7cb8c.firebaseapp.com",
@@ -73,79 +71,66 @@
             appId: "1:113369441545:web:8b472668adca3ac41adfd8"
         };
         firebase.initializeApp(firebaseConfig);
-        const database = firebase.database();
+        const db = firebase.database();
 
         const morseButton = document.getElementById('morseButton');
-        const sendButton = document.getElementById('sendButton');
         const morseDisplay = document.getElementById('morseDisplay');
-
         let morseCode = '';
-        let message = '';
-        let pressStartTime = 0;
+        let isDah = false; // Track whether the button press is "dit" or "dah"
         let lastPressTime = Date.now();
-
-        // Morse Code Dictionary
-        const morseDict = {
-            '.-': 'A', '-...': 'B', '-.-.': 'C', '-..': 'D', '.': 'E', '..-.': 'F',
-            '--.': 'G', '....': 'H', '..': 'I', '.---': 'J', '-.-': 'K', '.-..': 'L',
-            '--': 'M', '-.': 'N', '---': 'O', '.--.': 'P', '--.-': 'Q', '.-.': 'R',
-            '...': 'S', '-': 'T', '..-': 'U', '...-': 'V', '.--': 'W', '-..-': 'X',
-            '-.--': 'Y', '--..': 'Z'
-        };
-
-        // Short press: "dit" | Long press: "dah"
+        
         morseButton.addEventListener('mousedown', () => {
-            pressStartTime = Date.now();
+            isDah = false; // Reset to dit on press start
+            lastPressTime = Date.now();
         });
 
         morseButton.addEventListener('mouseup', () => {
-            const pressDuration = Date.now() - pressStartTime;
-            if (pressDuration < 500) {
-                morseCode += '.';
-            } else {
+            const pressDuration = Date.now() - lastPressTime;
+            if (pressDuration > 300) {
                 morseCode += '-';
+            } else {
+                morseCode += '.';
             }
-
             updateDisplay();
-            autoSpace();
         });
 
-        // Update Morse code display
+        // Adds a space if there’s a delay of more than 1 second
+        setInterval(() => {
+            const now = Date.now();
+            if (now - lastPressTime > 1000 && morseCode && morseCode.slice(-1) !== ' ') {
+                morseCode += ' ';
+                updateDisplay();
+            }
+        }, 200);
+
+        // Update morse display in real-time
         function updateDisplay() {
             morseDisplay.textContent = morseCode;
         }
 
-        // Auto spacing between letters
-        function autoSpace() {
-            const currentTime = Date.now();
-            if (currentTime - lastPressTime > 1000 && morseCode) {
-                const decodedLetter = morseDict[morseCode] || '';
-                message += decodedLetter;
-                message += ' '; // Add space after each letter
-                morseCode = '';
-                updateDisplay();
-            }
-            lastPressTime = currentTime;
-        }
-
-        // Send message to Firebase
-        sendButton.addEventListener('click', () => {
-            if (morseCode) {
-                const decodedLetter = morseDict[morseCode] || '';
-                message += decodedLetter;
-            }
-
-            // Save message to Firebase
-            const timestamp = Date.now();
-            database.ref('messages').push({
-                message: message.trim(),
-                timestamp: timestamp
+        document.getElementById('sendButton').addEventListener('click', () => {
+            const message = convertMorseToText(morseCode.trim());
+            db.ref('messages').push({
+                message,
+                timestamp: Date.now()
             });
-
-            morseDisplay.textContent = ''; // Clear display
-            message = ''; // Reset message
-            morseCode = ''; // Reset morse code
+            morseCode = ''; // Clear after sending
+            updateDisplay();
         });
+
+        function convertMorseToText(morse) {
+            const morseDict = {
+                '.-': 'A', '-...': 'B', '-.-.': 'C', '-..': 'D', '.': 'E',
+                '..-.': 'F', '--.': 'G', '....': 'H', '..': 'I', '.---': 'J',
+                '-.-': 'K', '.-..': 'L', '--': 'M', '-.': 'N', '---': 'O',
+                '.--.': 'P', '--.-': 'Q', '.-.': 'R', '...': 'S', '-': 'T',
+                '..-': 'U', '...-': 'V', '.--': 'W', '-..-': 'X', '-.--': 'Y',
+                '--..': 'Z', '-----': '0', '.----': '1', '..---': '2',
+                '...--': '3', '....-': '4', '.....': '5', '-....': '6',
+                '--...': '7', '---..': '8', '----.': '9'
+            };
+            return morse.split(' ').map(code => morseDict[code] || '').join('');
+        }
     </script>
 </body>
 </html>
