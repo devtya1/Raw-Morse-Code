@@ -3,365 +3,134 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Transmitter</title>
+    <title>Morse Code Transmitter with Database</title>
+    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database.js"></script>
     <style>
-	    body {
+        body {
             margin: 0;
             padding: 0;
-            font-family: "Courier New", Courier, monospace;
-            background: linear-gradient(to right, #000000, #002222);
-            color: #00cccc;
             display: flex;
             flex-direction: column;
-            align-items: center;
             justify-content: center;
+            align-items: center;
             height: 100vh;
-            overflow: hidden;
+            font-family: Arial, sans-serif;
+            background: radial-gradient(circle, #1a1a1a, #000000);
+            color: #ffffff;
         }
 
-        /* Dialog Styling */
-        .dialog {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(0, 0, 0, 0.9);
-            color: #ffffff;
-            border: 2px solid #ff4444;
-            border-radius: 8px;
-            box-shadow: 0 0 15px #ff4444;
-            padding: 20px;
+        .container {
             text-align: center;
-            z-index: 1000;
-            width: 300px;
         }
 
-        /* Close Button */
-        .close-btn {
-            display: inline-block;
-            margin-top: 10px;
-            padding: 8px 12px;
-            font-size: 1rem;
-            background: #ff4444;
-            color: #ffffff;
+        .morse-input {
+            width: 80%;
+            max-width: 500px;
+            padding: 10px;
+            font-size: 16px;
+            border: 2px solid #444;
+            border-radius: 5px;
+            margin: 20px 0;
+            background-color: #111;
+            color: #fff;
+        }
+
+        .button {
+            padding: 10px 20px;
+            margin: 10px;
+            font-size: 16px;
             border: none;
-            border-radius: 4px;
+            border-radius: 5px;
+            background-color: #ff3366;
+            color: white;
             cursor: pointer;
             transition: 0.3s;
         }
 
-        .close-btn:hover {
-            background: #ff0000;
-        }
-
-        /* Final Warning Styling */
-        .warning {
-            background: #ff0000;
-            color: #ffffff;
-            border: 2px solid #990000;
-            text-shadow: 0 0 10px #990000, 0 0 20px #ff0000;
-        }
-
-        /* Hide Dialog Initially */
-        .hidden {
-            display: none;
-        }
-	    
-	.dialog {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            background: rgba(0, 0, 0, 0.8);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-        }
-
-        .hidden {
-            display: none;
-        }
-
-        .dialogContent {
-            background: rgba(0, 51, 51, 0.9);
-            border: 2px solid #00b3b3;
-            border-radius: 8px;
-            padding: 20px;
-            box-shadow: 0 0 20px rgba(0, 179, 179, 0.9);
-            color: #00cccc;
-            text-align: center;
-            position: relative;
-            width: 80%;
-            max-width: 400px;
-        }
-
-        .dialogContent p {
-            font-size: 1.5rem;
-            margin: 20px 0;
-        }
-
-        .closeButton {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            font-size: 1.5rem;
-            color: #00cccc;
-            cursor: pointer;
-            background: none;
-            border: none;
-        }
-
-        .closeButton:hover {
-            color: #ff6666;
-        }
-        /* General Body Styling */
-        body {
-            margin: 0;
-            padding: 0;
-            font-family: "Courier New", Courier, monospace;
-            background: linear-gradient(to right, #000000, #002222);
-            color: #00cccc;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            overflow: hidden;
-        }
-
-        /* Main Heading */
-        h1 {
-            font-size: 2.8rem;
-            text-shadow: 0 0 12px #00cccc, 0 0 24px #009999, 0 0 36px #007777;
-            margin-bottom: 20px;
-            text-align: center;
-            text-transform: uppercase;
-        }
-
-        /* Morse Preview Box */
-        #morsePreview {
-            width: 90%;
-            max-width: 600px;
-            height: 60px;
-            font-size: 1.8rem;
-            color: #00cccc;
-            background: rgba(0, 0, 0, 0.8);
-            border: 2px solid #00b3b3;
-            border-radius: 8px;
-            padding: 10px;
-            text-align: center;
-            margin-bottom: 30px;
-            box-shadow: 0 0 15px rgba(0, 179, 179, 0.8);
-        }
-
-        /* Circular Morse Button */
-        .button {
-            width: 160px;
-            height: 160px;
-            font-size: 1.5rem;
-            color: #ffffff;
-            background: radial-gradient(circle at top left, #004d4d, #001f1f);
-            border: 2px solid #00cccc;
-            border-radius: 50%;
-            cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-
-        /* Button Hover */
         .button:hover {
-            transform: scale(1.1);
-            box-shadow: 0 0 20px #00b3b3, 0 0 40px #007777;
+            background-color: #ff6688;
         }
 
-        /* Button Active State */
         .button:active {
             transform: scale(0.95);
-            background: radial-gradient(circle at top left, #002626, #000e0e);
-            box-shadow: inset 0 0 15px #004d4d;
         }
 
-        /* Send Button Styling */
-        #sendButton {
+        .output {
             margin-top: 20px;
-            padding: 15px 25px;
-            font-size: 1.3rem;
-            color: #ffffff;
-            background: linear-gradient(to right, #007777, #004d4d);
-            border: 2px solid #00b3b3;
-            border-radius: 6px;
-            cursor: pointer;
-            box-shadow: 0 0 10px rgba(0, 179, 179, 0.8);
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-
-        /* Send Button Hover */
-        #sendButton:hover {
-            transform: scale(1.1);
-            box-shadow: 0 0 20px #00b3b3, 0 0 40px #007777;
-        }
-
-        /* Send Button Active State */
-        #sendButton:active {
-            transform: scale(0.95);
-            background: linear-gradient(to right, #004d4d, #002626);
-            box-shadow: inset 0 0 15px #004d4d;
+            font-size: 18px;
+            background: #222;
+            padding: 15px;
+            border-radius: 10px;
+            color: #00ff00;
+            font-family: 'Courier New', Courier, monospace;
+            text-align: center;
         }
     </style>
 </head>
 <body>
-    <h1>Telegraph Transmitter</h1>
-    <div id="morsePreview">Enter Morse Code</div>
-    <button class="button" id="morseButton">Press</button>
-    <button id="sendButton">Send</button>
-
-     <div id="hintDialog" class="dialog hidden">
-        <div class="dialogContent">
-            <span id="closeDialog" class="closeButton">&times;</span>
-            <p id="hintText">This is the hint</p>
-        </div>
+    <div class="container">
+        <h1>Morse Code Transmitter</h1>
+        <textarea class="morse-input" id="morseInput" rows="5" placeholder="Enter your message here..."></textarea>
+        <br>
+        <button class="button" onclick="saveToDatabase()">Send</button>
+        <div class="output" id="output"></div>
     </div>
 
-	<div id="warningDialog" class="dialog hidden">
-        <p id="dialogMessage"></p>
-        <button id="closeButton" class="close-btn">Close</button>
-    </div>
-
-    <div id="finalDialog" class="dialog hidden warning">
-        <p>Test Closed!</p>
-    </div>
-
-    <!-- Firebase Configuration and JavaScript -->
-    <script src="https://www.gstatic.com/firebasejs/7.6.2/firebase-app.js"></script>
-	<script src="https://www.gstatic.com/firebasejs/7.6.2/firebase-firestore.js"></script>
-	<script src="https://www.gstatic.com/firebasejs/live/3.1/firebase.js"></script>
-<script>
-	/ Firebase configuration
+    <script>
+        // Initialize Firebase
         const firebaseConfig = {
-  apiKey: "AIzaSyBJP1UUNzEVahVanekcmoS6zCUunGjZh9Q",
-  authDomain: "comms-7cb8c.firebaseapp.com",
-  databaseURL: "https://comms-7cb8c-default-rtdb.firebaseio.com",
-  projectId: "comms-7cb8c",
-  storageBucket: "comms-7cb8c.firebasestorage.app",
-  messagingSenderId: "113369441545",
-  appId: "1:113369441545:web:8b472668adca3ac41adfd8"
-};
-
-// Initialize Firebase
-firebase.initializeApp(firebaseConfig);
-
-        const morsePreview = document.getElementById("morsePreview");
-        const morseButton = document.getElementById("morseButton");
-        const sendButton = document.getElementById("sendButton");
-
-        let morseCode = "";
-	let reloadCount = parseInt(localStorage.getItem("reloadCount")) || 0;
-        let isProcessing = false;
-        let pressTimer;
-        let isLongPress = false;
-        let spaceTimer;
-
-        const morseCodeMap = {
-            ".-": "A", "-...": "B", "-.-.": "C", "-..": "D", ".": "E",
-            "..-.": "F", "--.": "G", "....": "H", "..": "I", ".---": "J",
-            "-.-": "K", ".-..": "L", "--": "M", "-.": "N", "---": "O",
-            ".--.": "P", "--.-": "Q", ".-.": "R", "...": "S", "-": "T",
-            "..-": "U", "...-": "V", ".--": "W", "-..-": "X", "-.--": "Y",
-            "--..": "Z", "-----": "0", ".----": "1", "..---": "2", "...--": "3",
-            "....-": "4", ".....": "5", "-....": "6", "--...": "7", "---..": "8",
-            "----.": "9", "/": " "
+            apiKey: "AIzaSyBJP1UUNzEVahVanekcmoS6zCUunGjZh9Q",
+	  authDomain: "comms-7cb8c.firebaseapp.com",
+	  databaseURL: "https://comms-7cb8c-default-rtdb.firebaseio.com",
+	  projectId: "comms-7cb8c",
+	  storageBucket: "comms-7cb8c.firebasestorage.app",
+	  messagingSenderId: "113369441545",
+	  appId: "1:113369441545:web:8b472668adca3ac41adfd8"
         };
 
-        function addSpaceIfNeeded() {
-            spaceTimer = setTimeout(() => {
-                morseCode += " ";
-                updatePreview();
-            }, 1000); // 1 second delay for auto-space
-        }
+        const app = firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
 
-        function updatePreview() {
-            morsePreview.textContent = morseCode || "Enter Morse Code";
-        }
+        const morseCodeMap = {
+            'A': '.-',    'B': '-...',  'C': '-.-.',  'D': '-..',   'E': '.',
+            'F': '..-.',  'G': '--.',   'H': '....',  'I': '..',    'J': '.---',
+            'K': '-.-',   'L': '.-..',  'M': '--',    'N': '-.',    'O': '---',
+            'P': '.--.',  'Q': '--.-',  'R': '.-.',   'S': '...',   'T': '-',
+            'U': '..-',   'V': '...-',  'W': '.--',   'X': '-..-',  'Y': '-.--',
+            'Z': '--..',  '1': '.----', '2': '..---', '3': '...--', '4': '....-',
+            '5': '.....', '6': '-....', '7': '--...', '8': '---..', '9': '----.',
+            '0': '-----', ' ': ' '
+        };
 
-        function handleStart() {
-    isLongPress = false; // Reset long-press flag
-    clearTimeout(spaceTimer); // Clear any previous space timer
-    isProcessing = false; // Reset processing state
-    pressTimer = setTimeout(() => {
-        isLongPress = true; // Mark as a long press
-        morseCode += "-"; // Add dash
-        updatePreview(); // Update the display
-        isProcessing = true; // Prevent dot on release
-    }, 500); // 500ms for a long press
-}
+        function saveToDatabase() {
+	    const input = document.getElementById('morseInput').value.toUpperCase();
+            const output = input.split('').map(char => morseCodeMap[char] || '').join(' ');
+            document.getElementById('output').textContent = output || 'Invalid input!';
+		
+            const input = document.getElementById('morseInput').value;
+            const morse = document.getElementById('output').textContent;
 
-function handleEnd() {
-    clearTimeout(pressTimer); // Stop the long-press timer
-    if (!isProcessing && !isLongPress) {
-        morseCode += "."; // Add dot only if not a long press
-        updatePreview(); // Update the display
-    }
-    isProcessing = true; // Ensure no double action
-    addSpaceIfNeeded(); // Start space timer for auto-spacing
-}
-
-
-
-        // Add event listeners for both mouse and touch events
-        morseButton.addEventListener("mousedown", handleStart);
-        morseButton.addEventListener("mouseup", handleEnd);
-        morseButton.addEventListener("mouseleave", handleEnd);
-        morseButton.addEventListener("touchstart", (e) => {
-            e.preventDefault(); // Prevent touch gestures
-            handleStart();
-        });
-        morseButton.addEventListener("touchend", (e) => {
-            e.preventDefault(); // Prevent touch gestures
-            handleEnd();
-        });
-
-        sendButton.addEventListener("click", () => {
-            const words = morseCode.split(" / ");
-            const convertedText = words.map(word =>
-                word.split(" ").map(code => morseCodeMap[code] || "").join("")
-            ).join(" ");
-
-            // Store message in Firebase
-            const messageRef = firebase.database().ref("messages").push();
-            messageRef.set({
-                message: convertedText,
-                timestamp: Date.now()
-            }).then(() => {
-                alert("Message sent!");
-            }).catch((error) => {
-                alert("Failed to send message: " + error.message);
-            });
-
-            morseCode = "";
-            updatePreview();
-        });
-
-	const hintDialog = document.getElementById("hintDialog");
-        const hintText = document.getElementById("hintText");
-        const closeDialog = document.getElementById("closeDialog");
-
-        // Show dialog box with hint
-        function showHintDialog(hint) {
-            hintText.textContent = hint; // Set the hint text
-            hintDialog.classList.remove("hidden"); // Show the dialog
-        }
-
-        // Close the dialog box
-        closeDialog.addEventListener("click", () => {
-            hintDialog.classList.add("hidden"); // Hide the dialog
-        });
-
-        // Listen for hint updates in Firebase
-        firebase.database().ref("hint").on("value", (snapshot) => {
-            const hintData = snapshot.val();
-            if (hintData && hintData.text) {
-                showHintDialog(hintData.text); // Show the hint in the dialog box
+            if (!input || !morse) {
+                alert('Please convert the message to Morse code first!');
+                return;
             }
-        });
-</script>
+
+            const messageData = {
+                originalMessage: input,
+                morseCode: morse,
+                timestamp: new Date().toISOString()
+            };
+
+            // Save to Firebase Realtime Database
+            db.ref('messages').push(messageData, (error) => {
+                if (error) {
+                    alert('Error saving to database: ' + error.message);
+                } else {
+                    alert('Message saved to database successfully!');
+                }
+            });
+        }
+    </script>
+</body>
+</html>
