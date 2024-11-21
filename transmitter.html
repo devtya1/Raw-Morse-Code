@@ -101,16 +101,6 @@
             white-space: nowrap;
             overflow: hidden;
             box-sizing: border-box;
-            animation: marquee 10s linear infinite;
-        }
-
-        @keyframes marquee {
-            0% {
-                transform: translateX(100%);
-            }
-            100% {
-                transform: translateX(-100%);
-            }
         }
 
         @media screen and (max-width: 768px) {
@@ -155,9 +145,9 @@
         </div>
     </div>
 
-    <div class="marquee">
+    <marquee behaviour="scroll">
         Warning: This is a government website. Unauthorized use is prohibited.
-    </div>
+    </marquee>
 
     <script>
         const firebaseConfig = {
