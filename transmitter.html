@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Morse Code Transmitter</title>
+    <title>Research Analysis Wing</title>
     <script src="https://www.gstatic.com/firebasejs/7.6.2/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/7.6.2/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/live/3.1/firebase.js"></script>
@@ -13,6 +13,7 @@
             color: #00ffff;
             font-family: 'Courier New', Courier, monospace;
             margin: 0;
+            padding: 0;
             overflow: hidden;
         }
 
@@ -21,13 +22,20 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            width: 400px;
+            width: 90%;
+            max-width: 400px;
             padding: 20px;
             border: 2px solid #00ffff;
             border-radius: 10px;
             background: rgba(0, 0, 0, 0.8);
             box-shadow: 0 0 20px #00ffff;
-            cursor: move;
+        }
+
+        .heading {
+            text-align: center;
+            font-size: 24px;
+            color: #00ffff;
+            text-shadow: 0 0 20px #00ffff, 0 0 30px #00ffff, 0 0 40px #00ffff;
         }
 
         .dialog {
@@ -89,10 +97,36 @@
             color: white;
             font-weight: bold;
             padding: 5px 0;
+            white-space: nowrap;
+            overflow: hidden;
+            box-sizing: border-box;
+            animation: marquee 10s linear infinite;
+        }
+
+        @keyframes marquee {
+            0% {
+                transform: translateX(100%);
+            }
+            100% {
+                transform: translateX(-100%);
+            }
+        }
+
+        @media screen and (max-width: 768px) {
+            .transmitter {
+                width: 95%;
+                max-width: none;
+            }
+
+            .heading {
+                font-size: 20px;
+            }
         }
     </style>
 </head>
 <body>
+    <div class="heading">Research Analysis Wing</div>
+
     <div class="transmitter" id="transmitter">
         <h2>Morse Code Transmitter</h2>
         <div class="morse-display" id="morseDisplay"></div>
@@ -191,67 +225,17 @@
                 message: decodedMessage,
                 timestamp: Date.now()
             });
-            morseCode = "";
-            morseDisplay.textContent = "";
-        });
-
-        db.ref("hint").on("value", (snapshot) => {
-            if (snapshot.exists()) {
-                const hintData = snapshot.val();
-                hintContent.textContent = hintData.text;
-                hintDialog.style.display = "block";
-            }
+            morseCode = "";  // Clear after sending
+            morseDisplay.textContent = morseCode;
         });
 
         closeHintDialog.addEventListener("click", () => {
             hintDialog.style.display = "none";
         });
 
-        db.ref("fib").on("value", (snapshot) => {
-            if (snapshot.exists()) {
-                const fibData = snapshot.val();
-                fibQuestion.textContent = fibData.text;
-                fibDialog.style.display = "block";
-            }
-        });
-
         closeFibDialog.addEventListener("click", () => {
             fibDialog.style.display = "none";
         });
-
-        sendFibAnswer.addEventListener("click", () => {
-            db.ref("answers").push({
-                answer: fibAnswer.value,
-                timestamp: Date.now()
-            });
-            fibAnswer.value = "";
-            fibDialog.style.display = "none";
-        });
-
-        const makeDraggable = (element) => {
-            let isDragging = false, offsetX, offsetY;
-
-            element.addEventListener("mousedown", (e) => {
-                isDragging = true;
-                offsetX = e.clientX - element.offsetLeft;
-                offsetY = e.clientY - element.offsetTop;
-            });
-
-            document.addEventListener("mousemove", (e) => {
-                if (isDragging) {
-                    element.style.left = `${e.clientX - offsetX}px`;
-                    element.style.top = `${e.clientY - offsetY}px`;
-                }
-            });
-
-            document.addEventListener("mouseup", () => {
-                isDragging = false;
-            });
-        };
-
-        makeDraggable(document.getElementById("transmitter"));
-        makeDraggable(hintDialog);
-        makeDraggable(fibDialog);
     </script>
 </body>
 </html>
