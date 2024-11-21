@@ -220,42 +220,6 @@
             }
             lastPressTime = currentTime;
         });
-    let pressStartTime;
-
-    // Detect short and long presses
-    morseButton.addEventListener("mousedown", () => {
-        pressStartTime = Date.now(); // Start time of the press
-    });
-
-    morseButton.addEventListener("mouseup", () => {
-        const pressDuration = Date.now() - pressStartTime;
-
-        // Short press for '.'
-        if (pressDuration < 500) {
-            morseCode += ".";
-        } 
-        // Long press for '-'
-        else {
-            morseCode += "-";
-        }
-
-        morseDisplay.textContent = morseCode;
-    });
-
-    // Clear and send the morse code message
-    sendButton.addEventListener("click", () => {
-        const decodedMessage = decodeMorse(morseCode);
-        db.ref("messages").push(decodedMessage);
-        morseCode = ""; // Reset after sending
-        morseDisplay.textContent = morseCode;
-    });
-
-        sendButton.addEventListener("click", () => {
-            const decodedMessage = decodeMorse(morseCode);
-            db.ref("messages").push(decodedMessage);
-            morseCode = ""; // Clear after sending
-            morseDisplay.textContent = morseCode;
-        });
 
         closeHintDialog.addEventListener("click", () => {
             hintDialog.style.display = "none";
@@ -264,6 +228,50 @@
         closeFibDialog.addEventListener("click", () => {
             fibDialog.style.display = "none";
         });
+
+
+        let lastPressTime = Date.now();
+    let autoSpaceTimeout;
+
+    // Detect short and long presses
+    morseButton.addEventListener("mousedown", () => {
+        pressStartTime = Date.now(); // Record when the button is pressed
+
+        // Clear any previous auto-space timeout
+        clearTimeout(autoSpaceTimeout);
+    });
+
+    morseButton.addEventListener("mouseup", () => {
+        const pressDuration = Date.now() - pressStartTime;
+
+        // Determine if it's a short or long press
+        if (pressDuration < 500) {
+            morseCode += "."; // Short press adds a dot
+        } else {
+            morseCode += "-"; // Long press adds a dash
+        }
+
+        // Update display
+        morseDisplay.textContent = morseCode;
+
+        // Record the last press time
+        lastPressTime = Date.now();
+
+        // Set up auto-space after 1 second of inactivity
+        autoSpaceTimeout = setTimeout(() => {
+            morseCode += " "; // Add a space
+            morseDisplay.textContent = morseCode;
+        }, 1000);
+    });
+
+    // Send the Morse code
+    sendButton.addEventListener("click", () => {
+        const decodedMessage = decodeMorse(morseCode); // Decode the message
+        db.ref("messages").push(decodedMessage); // Send to Firebase
+        morseCode = ""; // Clear the code after sending
+        morseDisplay.textContent = morseCode; // Reset display
+        clearTimeout(autoSpaceTimeout); // Clear the timeout
+    });
     </script>
 </body>
 </html>
