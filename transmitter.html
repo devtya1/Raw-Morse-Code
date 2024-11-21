@@ -1,174 +1,229 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Telegraph Transmitter</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #000;
-      color: #0ff;
-      text-align: center;
-      margin: 0;
-      padding: 0;
-    }
-    h1 {
-      font-size: 2.5em;
-      margin-top: 20px;
-      color: #00ffea;
-      text-shadow: 0 0 10px #0ff, 0 0 20px #0ff;
-    }
-    .container {
-      background-color: #012;
-      border: 2px solid #0ff;
-      width: 300px;
-      margin: 20px auto;
-      padding: 20px;
-      border-radius: 10px;
-      box-shadow: 0 0 10px #00f;
-    }
-    .button {
-      background-color: #0ff;
-      border: none;
-      color: #012;
-      padding: 15px;
-      font-size: 1em;
-      cursor: pointer;
-      margin: 10px;
-      border-radius: 5px;
-      width: 100%;
-    }
-    #morseDisplay {
-      color: #0ff;
-      font-size: 1.5em;
-      margin: 10px 0;
-    }
-    #dialogBox {
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      background: #012;
-      border: 2px solid #0ff;
-      padding: 20px;
-      border-radius: 8px;
-      color: #0ff;
-      display: none;
-      box-shadow: 0 0 20px #0ff;
-    }
-    .close-btn {
-      color: #ff0000;
-      font-size: 20px;
-      font-weight: bold;
-      cursor: pointer;
-      position: absolute;
-      top: 10px;
-      right: 15px;
-    }
-    .marquee {
-      color: red;
-      background-color: #111;
-      font-size: 1em;
-      margin-top: 20px;
-      padding: 10px;
-      white-space: nowrap;
-      overflow: hidden;
-      box-shadow: 0 0 10px red;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Morse Code Transmitter</title>
+    <script src="https://www.gstatic.com/firebasejs/7.6.2/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/7.6.2/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/live/3.1/firebase.js"></script>
+    <style>
+        body {
+            background-color: #000;
+            color: #00ffff;
+            font-family: 'Courier New', Courier, monospace;
+            margin: 0;
+            overflow: hidden;
+        }
+
+        .transmitter {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 400px;
+            padding: 20px;
+            border: 2px solid #00ffff;
+            border-radius: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            box-shadow: 0 0 20px #00ffff;
+            cursor: move;
+        }
+
+        .dialog {
+            position: fixed;
+            top: 20%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.9);
+            border: 2px solid #00ffff;
+            color: #00ffff;
+            width: 300px;
+            padding: 15px;
+            box-shadow: 0 0 10px #00ffff;
+            display: none;
+        }
+
+        .dialog-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .dialog-content {
+            margin: 10px 0;
+        }
+
+        .close {
+            cursor: pointer;
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .morse-button {
+            background-color: #00ffff;
+            border: none;
+            padding: 20px;
+            margin: 10px 0;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        .morse-display {
+            margin: 10px 0;
+            padding: 10px;
+            border: 1px solid #00ffff;
+            border-radius: 5px;
+            background: black;
+            color: #00ffff;
+            height: 50px;
+            overflow-y: auto;
+        }
+
+        .marquee {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            background: red;
+            color: white;
+            font-weight: bold;
+            padding: 5px 0;
+        }
+    </style>
 </head>
 <body>
-  <h1>TELEGRAPH RECEIVER</h1>
-  <div class="container">
-    <div id="morseDisplay">...</div>
-    <button class="button" id="morseButton" onmousedown="startMorse()" onmouseup="endMorse()">Press for Morse Code</button>
-    <button class="button" onclick="sendMessage()">Send</button>
-  </div>
-  
-  <div id="dialogBox">
-    <span class="close-btn" onclick="closeDialog()">×</span>
-    <p id="hintMessage"></p>
-  </div>
-  
-  <div class="marquee">⚠️ WARNING: This is a government website. Unauthorized access is prohibited. ⚠️</div>
+    <div class="transmitter" id="transmitter">
+        <h2>Morse Code Transmitter</h2>
+        <div class="morse-display" id="morseDisplay"></div>
+        <button class="morse-button" id="morseButton">Press</button>
+        <button class="morse-button" id="sendButton">Send</button>
+    </div>
 
-  <script src="https://www.gstatic.com/firebasejs/7.6.2/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/7.6.2/firebase-firestore.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/live/3.1/firebase.js"></script>
-  
-  <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyBJP1UUNzEVahVanekcmoS6zCUunGjZh9Q",
-      authDomain: "comms-7cb8c.firebaseapp.com",
-      databaseURL: "https://comms-7cb8c-default-rtdb.firebaseio.com",
-      projectId: "comms-7cb8c",
-      storageBucket: "comms-7cb8c.firebaseapp.com",
-      messagingSenderId: "113369441545",
-      appId: "1:113369441545:web:8b472668adca3ac41adfd8"
-    };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
+    <div class="dialog" id="hintDialog">
+        <div class="dialog-header">
+            <span>Hint</span>
+            <span class="close" id="closeHintDialog">&times;</span>
+        </div>
+        <div class="dialog-content" id="hintContent"></div>
+    </div>
 
-    let morseCode = "";
-    let lastInputTime = Date.now();
-    let holdStart = 0;
-    const DASH_THRESHOLD = 500; // time in milliseconds to register as dash
+    <div class="dialog" id="fibDialog">
+        <div class="dialog-header">
+            <span>Fill in the Blank</span>
+            <span class="close" id="closeFibDialog">&times;</span>
+        </div>
+        <div class="dialog-content">
+            <div id="fibQuestion"></div>
+            <input type="text" id="fibAnswer" placeholder="Enter your answer" />
+            <button id="sendFibAnswer">Send</button>
+        </div>
+    </div>
 
-    function startMorse() {
-      holdStart = Date.now(); // Track when the button is pressed
-    }
+    <div class="marquee">
+        Warning: This is a government website. Unauthorized use is prohibited.
+    </div>
 
-    function endMorse() {
-      const holdDuration = Date.now() - holdStart;
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyBJP1UUNzEVahVanekcmoS6zCUunGjZh9Q",
+            authDomain: "comms-7cb8c.firebaseapp.com",
+            databaseURL: "https://comms-7cb8c-default-rtdb.firebaseio.com",
+            projectId: "comms-7cb8c",
+            storageBucket: "comms-7cb8c.firebasestorage.app",
+            messagingSenderId: "113369441545",
+            appId: "1:113369441545:web:8b472668adca3ac41adfd8"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
 
-      const now = Date.now();
-      const timeDiff = now - lastInputTime;
-      lastInputTime = now;
+        const morseDisplay = document.getElementById("morseDisplay");
+        const morseButton = document.getElementById("morseButton");
+        const sendButton = document.getElementById("sendButton");
+        const hintDialog = document.getElementById("hintDialog");
+        const hintContent = document.getElementById("hintContent");
+        const closeHintDialog = document.getElementById("closeHintDialog");
+        const fibDialog = document.getElementById("fibDialog");
+        const fibQuestion = document.getElementById("fibQuestion");
+        const fibAnswer = document.getElementById("fibAnswer");
+        const sendFibAnswer = document.getElementById("sendFibAnswer");
+        const closeFibDialog = document.getElementById("closeFibDialog");
 
-      if (timeDiff > 1000) morseCode += " ";
+        let morseCode = "";
+        let startTime;
 
-      // Check if hold duration is long enough for a dash
-      if (holdDuration >= DASH_THRESHOLD) {
-        morseCode += "-";
-      } else {
-        morseCode += ".";
-      }
-      
-      document.getElementById("morseDisplay").innerText = morseCode;
-    }
+        morseButton.addEventListener("mousedown", () => {
+            startTime = Date.now();
+        });
 
-    function sendMessage() {
-      const text = decodeMorse(morseCode.trim());
-      const timestamp = Date.now();
+        morseButton.addEventListener("mouseup", () => {
+            const duration = Date.now() - startTime;
+            morseCode += duration > 300 ? "-" : ".";
+            morseDisplay.textContent = morseCode;
+        });
 
-      db.ref('messages').push({ message: text, timestamp });
-      morseCode = "";
-      document.getElementById("morseDisplay").innerText = "...";
-    }
+        sendButton.addEventListener("click", () => {
+            db.ref("messages").push({
+                message: morseCode,
+                timestamp: Date.now()
+            });
+            morseCode = "";
+            morseDisplay.textContent = "";
+        });
 
-    function decodeMorse(morse) {
-      const morseToText = {
-        ".-": "A", "-...": "B", "-.-.": "C", "-..": "D", ".": "E", "..-.": "F",
-        "--.": "G", "....": "H", "..": "I", ".---": "J", "-.-": "K", ".-..": "L",
-        "--": "M", "-.": "N", "---": "O", ".--.": "P", "--.-": "Q", ".-.": "R",
-        "...": "S", "-": "T", "..-": "U", "...-": "V", ".--": "W", "-..-": "X",
-        "-.--": "Y", "--..": "Z"
-      };
-      return morse.split(" ").map(code => morseToText[code] || "?").join("");
-    }
+        db.ref("hint").on("value", (snapshot) => {
+            if (snapshot.exists()) {
+                const hintData = snapshot.val();
+                hintContent.textContent = hintData.text;
+                hintDialog.style.display = "block";
+            }
+        });
 
-    db.ref("hint").on("value", snapshot => {
-      const hint = snapshot.val();
-      if (hint && hint.text) {
-        document.getElementById("hintMessage").innerText = hint.text;
-        document.getElementById("dialogBox").style.display = "block";
-      }
-    });
+        closeHintDialog.addEventListener("click", () => {
+            hintDialog.style.display = "none";
+        });
 
-    function closeDialog() {
-      document.getElementById("dialogBox").style.display = "none";
-    }
-  </script>
+        db.ref("fib").on("value", (snapshot) => {
+            if (snapshot.exists()) {
+                const fibData = snapshot.val();
+                fibQuestion.textContent = fibData.text;
+                fibDialog.style.display = "block";
+            }
+        });
+
+        closeFibDialog.addEventListener("click", () => {
+            fibDialog.style.display = "none";
+        });
+
+        sendFibAnswer.addEventListener("click", () => {
+            db.ref("answers").push({
+                answer: fibAnswer.value,
+                timestamp: Date.now()
+            });
+            fibAnswer.value = "";
+            fibDialog.style.display = "none";
+        });
+
+        const transmitter = document.getElementById("transmitter");
+        let isDragging = false;
+        let offsetX, offsetY;
+
+        transmitter.addEventListener("mousedown", (e) => {
+            isDragging = true;
+            offsetX = e.offsetX;
+            offsetY = e.offsetY;
+        });
+
+        document.addEventListener("mousemove", (e) => {
+            if (isDragging) {
+                transmitter.style.left = `${e.pageX - offsetX}px`;
+                transmitter.style.top = `${e.pageY - offsetY}px`;
+            }
+        });
+
+        document.addEventListener("mouseup", () => {
+            isDragging = false;
+        });
+    </script>
 </body>
 </html>
