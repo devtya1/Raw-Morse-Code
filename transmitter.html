@@ -31,7 +31,7 @@
         }
 
         .dialog {
-            position: absolute;
+            position: fixed;
             top: 20%;
             left: 50%;
             transform: translate(-50%, -50%);
@@ -42,7 +42,6 @@
             padding: 15px;
             box-shadow: 0 0 10px #00ffff;
             display: none;
-            border-radius: 10px;
         }
 
         .dialog-header {
@@ -91,26 +90,6 @@
             font-weight: bold;
             padding: 5px 0;
         }
-
-        .dialog input {
-            width: 100%;
-            padding: 10px;
-            margin: 10px 0;
-            border-radius: 5px;
-            border: 1px solid #00ffff;
-            background-color: black;
-            color: #00ffff;
-        }
-
-        .dialog button {
-            background-color: #00ffff;
-            border: none;
-            padding: 10px;
-            font-size: 14px;
-            border-radius: 5px;
-            cursor: pointer;
-            color: black;
-        }
     </style>
 </head>
 <body>
@@ -127,8 +106,6 @@
             <span class="close" id="closeHintDialog">&times;</span>
         </div>
         <div class="dialog-content" id="hintContent"></div>
-        <input type="text" id="hintInput" placeholder="Enter your hint">
-        <button id="sendHintButton">Send</button>
     </div>
 
     <div class="dialog" id="fibDialog">
@@ -138,7 +115,7 @@
         </div>
         <div class="dialog-content">
             <div id="fibQuestion"></div>
-            <input type="text" id="fibAnswer" placeholder="Enter your answer">
+            <input type="text" id="fibAnswer" placeholder="Enter your answer" />
             <button id="sendFibAnswer">Send</button>
         </div>
     </div>
@@ -164,17 +141,32 @@
         const morseButton = document.getElementById("morseButton");
         const sendButton = document.getElementById("sendButton");
         const hintDialog = document.getElementById("hintDialog");
+        const hintContent = document.getElementById("hintContent");
         const closeHintDialog = document.getElementById("closeHintDialog");
-        const sendHintButton = document.getElementById("sendHintButton");
-        const hintInput = document.getElementById("hintInput");
         const fibDialog = document.getElementById("fibDialog");
-        const closeFibDialog = document.getElementById("closeFibDialog");
-        const sendFibAnswer = document.getElementById("sendFibAnswer");
         const fibQuestion = document.getElementById("fibQuestion");
         const fibAnswer = document.getElementById("fibAnswer");
+        const sendFibAnswer = document.getElementById("sendFibAnswer");
+        const closeFibDialog = document.getElementById("closeFibDialog");
 
         let morseCode = "";
         let startTime;
+        let lastPressTime = Date.now();
+
+        const morseToText = {
+            ".-": "A", "-...": "B", "-.-.": "C", "-..": "D", ".": "E",
+            "..-.": "F", "--.": "G", "....": "H", "..": "I", ".---": "J",
+            "-.-": "K", ".-..": "L", "--": "M", "-.": "N", "---": "O",
+            ".--.": "P", "--.-": "Q", ".-.": "R", "...": "S", "-": "T",
+            "..-": "U", "...-": "V", ".--": "W", "-..-": "X", "-.--": "Y",
+            "--..": "Z", "-----": "0", ".----": "1", "..---": "2", "...--": "3",
+            "....-": "4", ".....": "5", "-....": "6", "--...": "7", "---..": "8",
+            "----.": "9", "/": " "
+        };
+
+        const decodeMorse = (code) => {
+            return code.split(" ").map(symbol => morseToText[symbol] || "").join("");
+        };
 
         morseButton.addEventListener("mousedown", () => {
             startTime = Date.now();
@@ -182,13 +174,21 @@
 
         morseButton.addEventListener("mouseup", () => {
             const duration = Date.now() - startTime;
+            const timeSinceLastPress = Date.now() - lastPressTime;
+
+            if (timeSinceLastPress > 1000) {
+                morseCode += " ";
+            }
+
             morseCode += duration > 300 ? "-" : ".";
             morseDisplay.textContent = morseCode;
+            lastPressTime = Date.now();
         });
 
         sendButton.addEventListener("click", () => {
+            const decodedMessage = decodeMorse(morseCode.trim());
             db.ref("messages").push({
-                message: morseCode,
+                message: decodedMessage,
                 timestamp: Date.now()
             });
             morseCode = "";
@@ -197,10 +197,9 @@
 
         db.ref("hint").on("value", (snapshot) => {
             if (snapshot.exists()) {
+                const hintData = snapshot.val();
+                hintContent.textContent = hintData.text;
                 hintDialog.style.display = "block";
-                hintDialog.style.left = "50%";
-                hintDialog.style.top = "50%";
-                document.getElementById("hintContent").textContent = snapshot.val().text;
             }
         });
 
@@ -208,16 +207,11 @@
             hintDialog.style.display = "none";
         });
 
-        sendHintButton.addEventListener("click", () => {
-            alert("Hint sent: " + hintInput.value);
-        });
-
         db.ref("fib").on("value", (snapshot) => {
             if (snapshot.exists()) {
+                const fibData = snapshot.val();
+                fibQuestion.textContent = fibData.text;
                 fibDialog.style.display = "block";
-                fibDialog.style.left = "50%";
-                fibDialog.style.top = "50%";
-                fibQuestion.textContent = snapshot.val().text;
             }
         });
 
@@ -234,30 +228,30 @@
             fibDialog.style.display = "none";
         });
 
-        function makeMovable(element) {
-            let isDragging = false;
-            let offsetX, offsetY;
+        const makeDraggable = (element) => {
+            let isDragging = false, offsetX, offsetY;
 
             element.addEventListener("mousedown", (e) => {
                 isDragging = true;
-                offsetX = e.offsetX;
-                offsetY = e.offsetY;
+                offsetX = e.clientX - element.offsetLeft;
+                offsetY = e.clientY - element.offsetTop;
             });
 
             document.addEventListener("mousemove", (e) => {
                 if (isDragging) {
-                    element.style.left = `${e.pageX - offsetX}px`;
-                    element.style.top = `${e.pageY - offsetY}px`;
+                    element.style.left = `${e.clientX - offsetX}px`;
+                    element.style.top = `${e.clientY - offsetY}px`;
                 }
             });
 
             document.addEventListener("mouseup", () => {
                 isDragging = false;
             });
-        }
+        };
 
-        makeMovable(hintDialog);
-        makeMovable(fibDialog);
+        makeDraggable(document.getElementById("transmitter"));
+        makeDraggable(hintDialog);
+        makeDraggable(fibDialog);
     </script>
 </body>
 </html>
