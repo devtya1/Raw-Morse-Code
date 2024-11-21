@@ -31,11 +31,12 @@
             box-shadow: 0 0 20px #00ffff;
         }
 
-        .heading {
+        h1 {
+            font-size: 2.8rem;
+            text-shadow: 0 0 12px #00cccc, 0 0 24px #009999, 0 0 36px #007777;
+            margin-bottom: 20px;
             text-align: center;
-            font-size: 24px;
-            color: #00ffff;
-            text-shadow: 0 0 20px #00ffff, 0 0 30px #00ffff, 0 0 40px #00ffff;
+            text-transform: uppercase;
         }
 
         .dialog {
@@ -118,14 +119,14 @@
                 max-width: none;
             }
 
-            .heading {
+            h1 {
                 font-size: 20px;
             }
         }
     </style>
 </head>
 <body>
-    <div class="heading">Research Analysis Wing</div>
+    <h1>Research Analysis Wing</h1>
 
     <div class="transmitter" id="transmitter">
         <h2>Morse Code Transmitter</h2>
@@ -202,30 +203,37 @@
             return code.split(" ").map(symbol => morseToText[symbol] || "").join("");
         };
 
-        morseButton.addEventListener("mousedown", () => {
-            startTime = Date.now();
-        });
+        let reloadCount = 0;
 
-        morseButton.addEventListener("mouseup", () => {
-            const duration = Date.now() - startTime;
-            const timeSinceLastPress = Date.now() - lastPressTime;
+        window.onload = function() {
+            db.ref("reloads").once("value", snapshot => {
+                reloadCount = snapshot.val() ? snapshot.val() : 0;
+                reloadCount++;
+                db.ref("reloads").set(reloadCount);
 
-            if (timeSinceLastPress > 1000) {
-                morseCode += " ";
+                if (reloadCount >= 4) {
+                    const dialog = document.createElement('div');
+                    dialog.classList.add('dialog');
+                    dialog.innerHTML = `<div class="dialog-header"><span>Test Closed!</span></div><div class="dialog-content">You have reloaded the page ${reloadCount} times.</div>`;
+                    document.body.appendChild(dialog);
+                    dialog.style.display = "block";
+                }
+            });
+        };
+
+        morseButton.addEventListener("click", () => {
+            const currentTime = Date.now();
+            if (currentTime - lastPressTime > 1000) {
+                morseCode += ".";
+                morseDisplay.textContent = morseCode;
             }
-
-            morseCode += duration > 300 ? "-" : ".";
-            morseDisplay.textContent = morseCode;
-            lastPressTime = Date.now();
+            lastPressTime = currentTime;
         });
 
         sendButton.addEventListener("click", () => {
-            const decodedMessage = decodeMorse(morseCode.trim());
-            db.ref("messages").push({
-                message: decodedMessage,
-                timestamp: Date.now()
-            });
-            morseCode = "";  // Clear after sending
+            const decodedMessage = decodeMorse(morseCode);
+            db.ref("messages").push(decodedMessage);
+            morseCode = ""; // Clear after sending
             morseDisplay.textContent = morseCode;
         });
 
