@@ -40,18 +40,20 @@
         }
 
         .dialog {
-            position: fixed;
-            top: 20%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(0, 0, 0, 0.9);
-            border: 2px solid #00ffff;
-            color: #00ffff;
-            width: 300px;
-            padding: 15px;
-            box-shadow: 0 0 10px #00ffff;
-            display: none;
-        }
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0, 0, 0, 0.9);
+    border: 2px solid #00ffff;
+    color: #00ffff;
+    width: 300px;
+    padding: 15px;
+    box-shadow: 0 0 10px #00ffff;
+    display: none;
+    z-index: 1000; /* Ensure it appears above other elements */
+}
+
 
         .dialog-header {
             display: flex;
@@ -195,22 +197,32 @@
 
         let reloadCount = 0;
 
-        window.onload = function() {
-            db.ref("reloads").once("value", snapshot => {
-                reloadCount = snapshot.val() ? snapshot.val() : 0;
-                reloadCount++;
-                db.ref("reloads").set(reloadCount);
+        window.onload = function () {
+    db.ref("reloads").once("value", snapshot => {
+        reloadCount = snapshot.val() ? snapshot.val() : 0;
+        reloadCount++;
+        db.ref("reloads").set(reloadCount);
 
-                if (reloadCount >= 4) {
-                    document.getElementById("transmitter").style.display = "none";
-                    const dialog = document.createElement('div');
-                    dialog.classList.add('dialog');
-                    dialog.innerHTML = `<div class="dialog-header"><span>Test Closed!</span></div><div class="dialog-content">You have reloaded the page ${reloadCount} times.</div>`;
-                    document.body.appendChild(dialog);
-                    dialog.style.display = "block";
-                }
-            });
-        };
+        if (reloadCount >= 4) {
+            document.getElementById("transmitter").style.display = "none";
+            const dialog = document.createElement('div');
+            dialog.classList.add('dialog');
+            dialog.style.top = "50%";
+            dialog.style.left = "50%";
+            dialog.style.transform = "translate(-50%, -50%)"; // Center the dialog
+            dialog.innerHTML = `
+                <div class="dialog-header">
+                    <span>Test Closed!</span>
+                </div>
+                <div class="dialog-content">
+                    You have reloaded the page ${reloadCount} times.
+                </div>`;
+            document.body.appendChild(dialog);
+            dialog.style.display = "block";
+        }
+    });
+};
+
 
         morseButton.addEventListener("click", () => {
             const currentTime = Date.now();
@@ -265,12 +277,19 @@
 
     // Send the Morse code
     sendButton.addEventListener("click", () => {
-        const decodedMessage = decodeMorse(morseCode); // Decode the message
-        db.ref("messages").push(decodedMessage); // Send to Firebase
-        morseCode = ""; // Clear the code after sending
-        morseDisplay.textContent = morseCode; // Reset display
-        clearTimeout(autoSpaceTimeout); // Clear the timeout
-    });
+    const decodedMessage = decodeMorse(morseCode); // Decode the message
+    const timestamp = new Date().toISOString(); // Current timestamp
+    const messageData = {
+        morseCode: morseCode,      // Raw Morse code
+        decodedMessage: decodedMessage, // Decoded text
+        timestamp: timestamp       // Timestamp
+    };
+    db.ref("messages").push(messageData); // Send structured message to Firebase
+
+    morseCode = ""; // Clear the code after sending
+    morseDisplay.textContent = morseCode; // Reset display
+    clearTimeout(autoSpaceTimeout); // Clear the timeout
+});
     </script>
 </body>
 </html>
