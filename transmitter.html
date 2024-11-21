@@ -221,6 +221,37 @@
             lastPressTime = currentTime;
         });
 
+        let morseCode = "";
+    let pressStartTime;
+
+    // Detect short and long presses
+    morseButton.addEventListener("mousedown", () => {
+        pressStartTime = Date.now(); // Start time of the press
+    });
+
+    morseButton.addEventListener("mouseup", () => {
+        const pressDuration = Date.now() - pressStartTime;
+
+        // Short press for '.'
+        if (pressDuration < 500) {
+            morseCode += ".";
+        } 
+        // Long press for '-'
+        else {
+            morseCode += "-";
+        }
+
+        morseDisplay.textContent = morseCode;
+    });
+
+    // Clear and send the morse code message
+    sendButton.addEventListener("click", () => {
+        const decodedMessage = decodeMorse(morseCode);
+        db.ref("messages").push(decodedMessage);
+        morseCode = ""; // Reset after sending
+        morseDisplay.textContent = morseCode;
+    });
+
         sendButton.addEventListener("click", () => {
             const decodedMessage = decodeMorse(morseCode);
             db.ref("messages").push(decodedMessage);
