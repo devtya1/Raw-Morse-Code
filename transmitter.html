@@ -214,7 +214,6 @@
                 if (reloadCount >= 4) {
                     document.getElementById("transmitter").style.display = "none";
                     const dialog = document.createElement('div');
-                    dialog.style.paddingTop(150px);
                     dialog.classList.add('dialog');
                     dialog.innerHTML = `<div class="dialog-header"><span>Test Closed!</span></div><div class="dialog-content">You have reloaded the page ${reloadCount} times.</div>`;
                     document.body.appendChild(dialog);
