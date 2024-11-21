@@ -153,8 +153,8 @@
         // Listen for new messages
         firebase.database().ref("messages").on("child_added", (snapshot) => {
             const message = snapshot.val();
-            if (message && message.message) {
-                displayMessage(message.message);
+            if (message && message.decodedMessage) {
+                displayMessage(message.decodedMessage);
             }
         });
 
