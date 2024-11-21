@@ -175,7 +175,6 @@
         const fibAnswer = document.getElementById("fibAnswer");
         const sendFibAnswer = document.getElementById("sendFibAnswer");
         const closeFibDialog = document.getElementById("closeFibDialog");
-
         let morseCode = "";
         let startTime;
         let lastPressTime = Date.now();
@@ -290,6 +289,48 @@
     morseDisplay.textContent = morseCode; // Reset display
     clearTimeout(autoSpaceTimeout); // Clear the timeout
 });
+
+    // Listen for changes in the 'hint' node
+    db.ref("hint").on("value", snapshot => {
+        const hint = snapshot.val();
+        if (hint) {
+            hintContent.textContent = hint; // Set the hint content
+            hintDialog.style.display = "block"; // Show the hint dialog
+        } else {
+            hintDialog.style.display = "none"; // Hide the hint dialog if no content
+        }
+    });
+
+    // Listen for changes in the 'fib' node
+    db.ref("fib").on("value", snapshot => {
+        const fib = snapshot.val();
+        if (fib && fib.question) {
+            fibQuestion.textContent = fib.question; // Set the question content
+            fibDialog.style.display = "block"; // Show the FIB dialog
+        } else {
+            fibDialog.style.display = "none"; // Hide the FIB dialog if no content
+        }
+    });
+
+    // Close the Hint dialog
+    closeHintDialog.addEventListener("click", () => {
+        hintDialog.style.display = "none";
+    });
+
+    // Close the FIB dialog
+    closeFibDialog.addEventListener("click", () => {
+        fibDialog.style.display = "none";
+    });
+
+    // Send FIB answer to Firebase
+    sendFibAnswer.addEventListener("click", () => {
+        const answer = fibAnswer.value.trim(); // Get the answer
+        if (answer) {
+            db.ref("fib/answers").push({ answer }); // Save the answer to Firebase
+            fibAnswer.value = ""; // Clear the input
+            fibDialog.style.display = "none"; // Hide the dialog
+        }
+    });
     </script>
 </body>
 </html>
